@@ -1,0 +1,23 @@
+{
+  "name": "sysmon",
+  "version": "1.0.0",
+  "description": "Single-user server status dashboard",
+  "main": "index.js",
+  "type": "commonjs",
+  "private": true,
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js",
+    "set-password": "node scripts/set-password.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "express-handlebars": "^7.1.3",
+    "express-rate-limit": "^7.5.0",
+    "express-session": "^1.18.1",
+    "helmet": "^8.0.0",
+    "memorystore": "^1.6.7",
+    "systeminformation": "^5.25.0"
+  }
+}

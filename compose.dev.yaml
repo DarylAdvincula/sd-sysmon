@@ -1,0 +1,13 @@
+services:
+  app:
+    build:
+      target: dev
+    image: sysmon:dev
+    environment:
+      NODE_ENV: development
+      COOKIE_SECURE: "false"
+      AUTH_FILE: /app/data/auth.json
+    volumes:
+      - .:/app
+      - /app/node_modules
+    restart: "no"

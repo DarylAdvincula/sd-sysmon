@@ -1,0 +1,16 @@
+services:
+  app:
+    build:
+      context: .
+      target: prod
+    image: sysmon:prod
+    ports:
+      - "3000:3000"
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      AUTH_FILE: /data/auth.json
+    volumes:
+      - ./data:/data:ro
+    restart: unless-stopped
+    mem_limit: 256m

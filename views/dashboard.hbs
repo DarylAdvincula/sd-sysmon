@@ -1,0 +1,45 @@
+<main class="dash">
+  <header class="top">
+    <div>
+      <h1>{{hostname}}</h1>
+      <p id="status" class="status" role="status">Connecting</p>
+    </div>
+    <form method="post" action="/logout">
+      <input type="hidden" name="_csrf" value="{{csrfToken}}">
+      <button type="submit" class="quiet">Sign out</button>
+    </form>
+  </header>
+
+  <section class="cpu" aria-labelledby="cpu-h">
+    <div class="cpu-head">
+      <h2 id="cpu-h">Processor</h2>
+      <p><span id="cpu-total" class="big">–</span> <span class="muted">across <span id="cpu-count">–</span> cores</span></p>
+    </div>
+    <div id="cores" class="cores" aria-hidden="true"></div>
+  </section>
+
+  <section class="rows" aria-label="Resources">
+    <div class="row">
+      <span class="k">Memory</span>
+      <div class="meter"><i id="mem-bar"></i></div>
+      <span class="v" id="mem-text">–</span>
+    </div>
+    <div class="row" id="ctr-row" hidden>
+      <span class="k">Container</span>
+      <div class="meter"><i id="ctr-bar"></i></div>
+      <span class="v" id="ctr-text">–</span>
+    </div>
+    <div id="disks"></div>
+    <div class="row" id="bat-row" hidden>
+      <span class="k">Battery</span>
+      <div class="meter"><i id="bat-bar"></i></div>
+      <span class="v" id="bat-text">–</span>
+    </div>
+    <div class="row plain">
+      <span class="k">Uptime</span>
+      <span></span>
+      <span class="v" id="uptime">–</span>
+    </div>
+  </section>
+</main>
+<script src="/static/dashboard.js" defer></script>
