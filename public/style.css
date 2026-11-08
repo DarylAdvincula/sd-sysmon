@@ -73,6 +73,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 .meter i[data-level="mid"] { background: var(--warn); }
 .meter i[data-level="high"] { background: var(--bad); }
 
+.row.stale .meter { opacity: 0.35; }
+
 @media (max-width: 30rem) {
   .row { grid-template-columns: 1fr auto; }
   .row .meter { grid-column: 1 / -1; order: 3; }

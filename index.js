@@ -1,4 +1,5 @@
 const os = require('node:os');
+const { timingSafeEqual } = require('node:crypto');
 const path = require('node:path');
 const express = require('express');
 const { engine } = require('express-handlebars');
@@ -7,7 +8,7 @@ const session = require('express-session');
 const MemoryStore = require('memorystore')(session);
 const rateLimit = require('express-rate-limit');
 const { checkPassword, csrf } = require('./src/auth');
-const { getStats } = require('./src/stats');
+const { getStats, setBattery } = require('./src/stats');
 
 const PORT = Number(process.env.PORT) || 3000;
 const PROD = process.env.NODE_ENV === 'production';
@@ -103,11 +104,36 @@ app.get('/api/stats', apiAuth, async (req, res) => {
   res.json(await getStats());
 });
 
+// The phone pushes its battery here (bearer token, no cookies). Disabled unless BATTERY_TOKEN is set.
+const BATTERY_TOKEN = process.env.BATTERY_TOKEN;
+if (BATTERY_TOKEN && BATTERY_TOKEN.length < 24) {
+  console.error('BATTERY_TOKEN must be at least 24 characters; battery endpoint disabled');
+}
+const batteryLimiter = rateLimit({ windowMs: 60_000, limit: 20, standardHeaders: 'draft-7', legacyHeaders: false });
+app.post('/api/battery', batteryLimiter, express.json({ limit: '1kb' }), (req, res) => {
+  if (!BATTERY_TOKEN || BATTERY_TOKEN.length < 24) return res.status(404).end();
+  const given = Buffer.from((req.get('authorization') || '').replace(/^Bearer /, ''));
+  const want = Buffer.from(BATTERY_TOKEN);
+  if (given.length !== want.length || !timingSafeEqual(given, want)) {
+    return res.status(401).json({ error: 'unauthorized' });
+  }
+  const { percent, charging, temperature } = req.body || {};
+  if (!Number.isFinite(percent) || percent < 0 || percent > 100) {
+    return res.status(400).json({ error: 'percent must be 0-100' });
+  }
+  setBattery({
+    percent: Math.round(percent),
+    charging: charging === true,
+    temperature: Number.isFinite(temperature) ? Math.round(temperature) : null,
+  });
+  res.sendStatus(204);
+});
+
 app.use((req, res) => res.status(404).send('Not found'));
 
 app.use((err, req, res, next) => {
   console.error(err);
-  res.status(500).send('Server error');
+  res.status(err.status >= 400 && err.status < 500 ? err.status : 500).send('Request error');
 });
 
 const server = app.listen(PORT, '0.0.0.0', () => {

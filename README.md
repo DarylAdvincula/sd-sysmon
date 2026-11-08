@@ -24,5 +24,5 @@ Dev needs `data/auth.json` too. Open http://localhost:3000 (cookies are not secu
 ## Notes
 - Rate limits: 120 requests/min per IP overall, 5 failed logins per 15 minutes per IP.
 - Sessions live in memory, so restarting the container signs you out.
-- Stats are what the VM sees, not the phone. For the phone's battery, write a JSON file and set BATTERY_FILE.
+- Stats are what the VM sees, not the phone. The phone's battery is pushed in by phone/battery-push.sh (Termux) and shown once BATTERY_TOKEN is set.
 - To change the password: rerun set-password.js, then `docker compose restart`.

@@ -14,17 +14,25 @@ const readNum = (file) => {
   }
 };
 
-// Optional: a JSON file like {"percent": 82, "charging": true, "updatedAt": "..."} written by something
-// on the phone itself (e.g. Termux:API). The VM cannot see the phone's battery on its own.
-function readBatteryFile() {
-  const file = process.env.BATTERY_FILE;
-  if (!file) return null;
-  try {
-    const j = JSON.parse(fs.readFileSync(file, 'utf8'));
-    return { percent: j.percent, charging: !!j.charging, source: 'file', updatedAt: j.updatedAt ?? null };
-  } catch {
-    return null;
+// The VM cannot see the phone's battery, so the phone pushes it (see phone/battery-push.sh -> POST /api/battery)
+let pushed = null;
+function setBattery(reading) {
+  pushed = { ...reading, receivedAt: Date.now() };
+  cache.at = 0; // next /api/stats call reflects it immediately
+}
+
+function batteryInfo(vm) {
+  if (vm.hasBattery) {
+    return { percent: vm.percent, charging: vm.isCharging, temperature: null, source: 'vm', ageSeconds: 0 };
   }
+  if (!pushed) return null;
+  return {
+    percent: pushed.percent,
+    charging: pushed.charging,
+    temperature: pushed.temperature,
+    source: 'phone',
+    ageSeconds: Math.round((Date.now() - pushed.receivedAt) / 1000),
+  };
 }
 
 async function collect() {
@@ -55,9 +63,7 @@ async function collect() {
       ? { memoryLimit: cgLimit, memoryUsed: cgUsed, percent: Math.round((cgUsed / cgLimit) * 100) }
       : null,
     disks,
-    battery: battery.hasBattery
-      ? { percent: battery.percent, charging: battery.isCharging, source: 'vm' }
-      : readBatteryFile(),
+    battery: batteryInfo(battery),
     uptimeSeconds: time.uptime,
   };
 }
@@ -71,4 +77,4 @@ async function getStats() {
   return inflight;
 }
 
-module.exports = { getStats };
+module.exports = { getStats, setBattery };

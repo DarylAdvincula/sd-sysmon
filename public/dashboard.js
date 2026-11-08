@@ -77,10 +77,18 @@
 
     $('bat-row').hidden = !s.battery;
     if (s.battery) {
-      // Low battery is the bad case, so invert the level colors
-      setBar($('bat-bar'), s.battery.percent);
-      $('bat-bar').dataset.level = s.battery.percent <= 15 ? 'high' : s.battery.percent <= 30 ? 'mid' : 'low';
-      $('bat-text').textContent = `${s.battery.percent}%${s.battery.charging ? ', charging' : ''}`;
+      const b = s.battery;
+      const stale = b.ageSeconds > 300;
+      setBar($('bat-bar'), b.percent);
+      // Low battery is the bad case, so the thresholds are inverted
+      $('bat-bar').dataset.level = b.percent <= 15 ? 'high' : b.percent <= 30 ? 'mid' : 'low';
+      const parts = [b.percent + '%'];
+      if (b.charging) parts.push('charging');
+      if (b.temperature != null) parts.push(b.temperature + '\u00b0C');
+      let text = parts.join(', ');
+      if (stale) text += ` (no update for ${Math.round(b.ageSeconds / 60)} min)`;
+      $('bat-text').textContent = text;
+      $('bat-row').classList.toggle('stale', stale);
     }
 
     $('uptime').textContent = fmtUptime(s.uptimeSeconds);
